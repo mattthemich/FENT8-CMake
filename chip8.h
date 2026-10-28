@@ -1,0 +1,40 @@
+#ifndef FENT8_CHIP8_H
+#define FENT8_CHIP8_H
+
+namespace chip8 {
+    class chip8 {
+    public:
+        //General
+        chip8();                            //Initializes the chip8 emulator
+        ~chip8();                           //Obliterate the chip8
+        void emulate_cycle();               //Emulates one cycle of the CPU
+
+        //Memory operations
+        void load_fonts();                                      //Loads the fonts into memory
+        void load_game(char* filepath);                         //Loads the rom from the filepath into memory
+        unsigned char read_mem(unsigned int addr);              //Retrieves a value from memory
+        void write_mem(unsigned int addr, unsigned char value); //Writes a value into memory
+
+        //Screen Operations
+        void draw_sprite();                                     //Draws a sprite to the screen
+        bool get_draw_flag();                                   //read bitch
+        unsigned char get_pixel(int x, int y);                  //Grab a pixel from the virtual screen
+        void set_pixel(int x, int y, unsigned char val);        //DEBUG ONLY: Sets 1 pixel to a certain value
+        void test_pattern();            //DEBUG ONLY: Makes a test pattern for the display
+    private:
+        unsigned short opcode;          //Stores the current opcode
+        unsigned char memory[4096];     //The 4KB of memory
+        unsigned char V[16];            //Registers V0-VE and the carry flag
+        unsigned short I;               //Index Register
+        unsigned short pc;              //Program counter
+        unsigned char screen[64*32];    //The simulated screen of the CHIP8
+        unsigned char delay_timer;      //Counts down to 0 at 60hz
+        unsigned char sound_timer;      //Makes a sound when it hits 0 (also 60hz)
+        unsigned short stack[16];       //Stack used for subroutines and jumps
+        unsigned short sp;              //Shows which part of the stack to go to
+        unsigned char key[16];          //Array used for keyboard input
+        bool draw_flag;                 //Set to true if the window should be updated
+    };
+} // chip8
+
+#endif //FENT8_CHIP8_H

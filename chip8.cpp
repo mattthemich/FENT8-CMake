@@ -19,6 +19,8 @@ namespace chip8 {
         chip8::sp = 0;
         chip8::key[16] = {0};
         chip8::draw_flag = false;
+        chip8::c1 = 0xFF6DE36F;
+        chip8::c2 = 0xFF244924;
     }
 
     chip8::~chip8() = default;
@@ -29,7 +31,28 @@ namespace chip8 {
 
     //Memory Operations
     void chip8::load_fonts() {
-        //todo
+        unsigned char fonts[80] = {
+            0xF0, 0x90, 0x90, 0x90, 0xF0,   //0
+            0x20, 0x60, 0x20, 0x20, 0x70,   //1
+            0xF0, 0x10, 0xF0, 0x80, 0xF0,   //2
+            0xF0, 0x10, 0xF0, 0x10, 0xF0,   //3
+            0x90, 0x90, 0xF0, 0x10, 0x10,   //4
+            0xF0, 0x80, 0xF0, 0x10, 0xF0,   //5
+            0xF0, 0x80, 0xF0, 0x90, 0xF0,   //6
+            0xF0, 0x10, 0x20, 0x40, 0x40,   //7
+            0xF0, 0x90, 0xF0, 0x90, 0xF0,   //8
+            0xF0, 0x90, 0xF0, 0x10, 0xF0,   //9
+            0xF0, 0x90, 0xF0, 0x90, 0x90,   //A
+            0xE0, 0x90, 0xE0, 0x90, 0xE0,   //B
+            0xF0, 0x80, 0x80, 0x80, 0xF0,   //C
+            0xE0, 0x90, 0x90, 0x90, 0xE0,   //D
+            0xF0, 0x80, 0xF0, 0x80, 0xF0,   //E
+            0xF0, 0x80, 0xF0, 0x80, 0x80    //F
+        };
+
+        for (int i = 0; i < 80; i++) {
+            chip8::write_mem(0x050 + i, fonts[i]);
+        }
     }
 
     void chip8::load_game(char *filepath) {
@@ -47,6 +70,14 @@ namespace chip8 {
     //Screen Operations
     void chip8::draw_sprite() {
         //todo
+    }
+
+    unsigned int chip8::get_color1() {
+        return chip8::c1;
+    }
+
+    unsigned int chip8::get_color2() {
+        return chip8::c2;
     }
 
     bool chip8::get_draw_flag() {
@@ -68,7 +99,7 @@ namespace chip8 {
         for (int j = 0; j < 32; j++) {
             for (int i = 0; i < 64; i++) {
                 unsigned char mod = ((i%2)+(j%2))%2;
-                set_pixel(i, j, (mod));
+                set_pixel(i, j, mod);
             }
         }
     }

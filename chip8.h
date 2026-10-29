@@ -17,8 +17,11 @@ namespace chip8 {
 
         //Screen Operations
         void draw_sprite();                                     //Draws a sprite to the screen
+        unsigned int get_color1();                              //Returns c1
+        unsigned int get_color2();                              //Returns c2
         bool get_draw_flag();                                   //read bitch
         unsigned char get_pixel(int x, int y);                  //Grab a pixel from the virtual screen
+        void set_palette(unsigned int color1, unsigned int color2); //Set the palette for the screen
         void set_pixel(int x, int y, unsigned char val);        //DEBUG ONLY: Sets 1 pixel to a certain value
         void test_pattern();            //DEBUG ONLY: Makes a test pattern for the display
     private:
@@ -34,6 +37,8 @@ namespace chip8 {
         unsigned short sp;              //Shows which part of the stack to go to
         unsigned char key[16];          //Array used for keyboard input
         bool draw_flag;                 //Set to true if the window should be updated
+        unsigned int c1;                //Color 1 for the palette
+        unsigned int c2;                //Color 2 for the palette
     };
 } // chip8
 

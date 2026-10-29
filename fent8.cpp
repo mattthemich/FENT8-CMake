@@ -42,9 +42,9 @@ void render() {
         for (int j = 0; j < 64; j++)
         {
             unsigned char pixel = fent8.get_pixel(j, i);
-            unsigned int output = 0xFF000000;
+            unsigned int output = fent8.get_color1();
             if (pixel > 0x00) {
-                output = 0xFFFFFFFF;
+                output = fent8.get_color2();
             }
 
             gFrameBuffer[j + (i*64)] = output;

@@ -14,7 +14,7 @@ namespace chip8 {
         chip8::memory[4096] = {0};
         chip8::V[16] = {0};
         chip8::I = 0;
-        chip8::pc = 0;
+        chip8::pc = START_ADDRESS;
         chip8::screen[64*32] = {0};
         chip8::delay_timer = 0;
         chip8::sound_timer = 0;
@@ -88,11 +88,11 @@ namespace chip8 {
     }
 
     unsigned char chip8::read_mem(unsigned int addr) {
-        //todo
+        return memory[addr];
     }
 
     void chip8::write_mem(unsigned int addr, unsigned char val) {
-        //todo
+        memory[addr] = val;
     }
 
     //Screen Operations
@@ -114,6 +114,10 @@ namespace chip8 {
 
     unsigned char chip8::get_pixel(int x, int y) {
         return chip8::screen[x + (y*64)];
+    }
+
+    void chip8::set_draw_flag(bool flag) {
+        chip8::draw_flag = flag;
     }
 
     void chip8::set_pixel(int x, int y, unsigned char val) {

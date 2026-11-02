@@ -21,10 +21,15 @@ namespace chip8 {
         unsigned int get_color2();                              //Returns c2
         bool get_draw_flag();                                   //read bitch
         unsigned char get_pixel(int x, int y);                  //Grab a pixel from the virtual screen
+        void set_draw_flag(bool flag);                          //peruse the text female canine
         void set_palette(unsigned int color1, unsigned int color2); //Set the palette for the screen
         void set_pixel(int x, int y, unsigned char val);        //DEBUG ONLY: Sets 1 pixel to a certain value
         void test_pattern();            //DEBUG ONLY: Makes a test pattern for the display
     private:
+        //Consts
+        const unsigned int START_ADDRESS = 0x200;
+
+        //Variables
         unsigned short opcode;          //Stores the current opcode
         unsigned char memory[4096];     //The 4KB of memory
         unsigned char V[16];            //Registers V0-VE and the carry flag

@@ -1,5 +1,8 @@
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -13,10 +16,69 @@ SDL_Texture* gSDLTexture;
 SDL_Window* window;
 SDL_Renderer* renderer;
 static int gDone;
+bool no_games;
 
 //CMD arguments
-static int res;             //First Argument,
-static char* game_path;
+static int res;             //First Argument, sets resolution of screen; RES=20
+static char* game_path;     //filepath of game; GAME_PATH="/home/user/Downloads/game name.ch8"
+
+void set_arguments(int argc, char* argv[]) {
+    for (int i = 1; i < argc; i++) {
+        //Try to delimit the string by the = sign
+        std::string orig_arg = argv[i];
+        std::string delimiter = "=";
+        std::string arg_type = orig_arg.substr(0, orig_arg.find(delimiter));
+        for (char &c : arg_type) {
+            c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        }
+
+        //If the specific variable is specified
+        if (arg_type == "RES") {
+            try {
+                int scale = std::stoi(orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1)));
+                res = scale;
+            }catch (std::invalid_argument error) {
+                std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
+                res = 20;
+            }catch (std::out_of_range error) {
+                std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
+                res = 20;
+            }
+        }else if (arg_type == "GAME_PATH") {
+            std::string path = orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1));
+            if (std::filesystem::exists(path)) {
+                game_path = new char[path.length()];
+                strcpy(game_path, path.c_str());
+                no_games = false;
+            }else {
+                no_games = true;
+            }
+        }else {
+            //If the variable is not specified
+            switch (i) {
+                case 1:
+                    try {
+                        res = std::stoi(argv[1]);
+                        std::cout << "Using scaling number " << res << "\n";
+                    }catch (const std::invalid_argument& errorCode) {
+                        std::cerr << "Error: invalid scaling size. Defaulting to 640 x 320.\n";
+                        res = 20;
+                    }catch (std::out_of_range error) {
+                        std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
+                        res = 20;
+                    }
+
+                case 2:
+                    if (std::filesystem::exists(argv[2])) {
+                        game_path = argv[2];
+                        no_games = false;
+                    }else {
+                        no_games = true;
+                    }
+            }
+        }
+    }
+}
 
 //Rendering functions
 void update() {
@@ -61,30 +123,7 @@ int main(int argc, char* argv[]) {
     res = 20;
     game_path = nullptr;
 
-    if (argc == 2) {
-        try {
-            res = std::stoi(argv[1]);
-            std::cout << "Using scaling number " << res << "\n";
-        }catch (const std::invalid_argument& errorCode) {
-            std::cerr << "Error: invalid scaling size. Defaulting to 640 x 320.\n";
-            res = 20;
-        }
-    //Check for screen size and game path
-    }else if (argc == 3) {
-        try {
-            res = std::stoi(argv[1]);
-            std::cout << "Using scaling number " << res << "\n";
-
-            //Get game path
-            game_path = argv[2];
-        }catch (const std::invalid_argument& errorCode) {
-            std::cerr << "Error: parameters.\n";
-            return 1;
-        }
-    }else if (argc > 3){
-        std::cout << "Error: too many inputs.\n";
-        return 1;
-    }
+    set_arguments(argc, argv);
 
     //Initialize SDL and Window
     SDL_Init(SDL_INIT_VIDEO);
@@ -142,6 +181,7 @@ int main(int argc, char* argv[]) {
         if (fent8.get_draw_flag()) {
             render();
             update();
+            fent8.set_draw_flag(false);
         }
     }
 
@@ -149,6 +189,7 @@ int main(int argc, char* argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    delete[] game_path;
 
     return 0;
 }

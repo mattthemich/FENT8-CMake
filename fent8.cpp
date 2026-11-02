@@ -13,7 +13,10 @@ SDL_Texture* gSDLTexture;
 SDL_Window* window;
 SDL_Renderer* renderer;
 static int gDone;
-static int res;
+
+//CMD arguments
+static int res;             //First Argument,
+static char* game_path;
 
 //Rendering functions
 void update() {
@@ -54,8 +57,9 @@ void render() {
 
 //The main
 int main(int argc, char* argv[]) {
-    //Check if an argument for the screen size was passed
+    //Only heck if an argument for the screen size was passed
     res = 20;
+    game_path = nullptr;
 
     if (argc == 2) {
         try {
@@ -65,8 +69,20 @@ int main(int argc, char* argv[]) {
             std::cerr << "Error: invalid scaling size. Defaulting to 640 x 320.\n";
             res = 20;
         }
-    }else if (argc > 2) {
-        std::cout << "Too many arguments\n";
+    //Check for screen size and game path
+    }else if (argc == 3) {
+        try {
+            res = std::stoi(argv[1]);
+            std::cout << "Using scaling number " << res << "\n";
+
+            //Get game path
+            game_path = argv[2];
+        }catch (const std::invalid_argument& errorCode) {
+            std::cerr << "Error: parameters.\n";
+            return 1;
+        }
+    }else if (argc > 3){
+        std::cout << "Error: too many inputs.\n";
         return 1;
     }
 
@@ -103,8 +119,15 @@ int main(int argc, char* argv[]) {
     SDL_Event e;
     bool quit = false;
 
-    //CHIP8 Screen Test
+    //CHIP8 Screen Test (and load game if needed)
     fent8.test_pattern();
+
+    if (game_path != nullptr) {
+        fent8.load_game(game_path);
+    }else {
+        std::cout << "No game path specified. Exiting...\n";
+        quit = true;
+    }
 
     //Main Loop
     while (!quit) {

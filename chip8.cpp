@@ -2,7 +2,10 @@
 // Created by fent on 10/27/26.
 //
 
+#include <fstream>
 #include "chip8.h"
+
+#include <iostream>
 
 namespace chip8 {
     //General
@@ -56,7 +59,32 @@ namespace chip8 {
     }
 
     void chip8::load_game(char *filepath) {
-        //todo
+        //Open the ifstream for a read-only file
+        std::ifstream game(filepath, std::ios::binary | std::ios::ate);
+
+        if (game.is_open()) {
+            //Get the size of the file, and make a character buffer to store the data
+            //It grabs the size of the file by setting the stream position all the way at the end of the file,
+            //and then storing that position in the size variable.
+            std::streampos size = game.tellg();
+            char* buffer = new char[size];
+
+            //After that, we then
+            game.seekg(0, std::ios::beg);
+            game.read(buffer, size);
+            game.close();
+
+            //Move buffer data into memory
+            for (int i = 0; i < size; i++) {
+                memory[0x200 + i] = buffer[i];
+            }
+
+            //Delete the buffer
+            delete[] buffer;
+
+        }else {
+            std::cout << "ERROR: game file could not be opened.\n";
+        }
     }
 
     unsigned char chip8::read_mem(unsigned int addr) {

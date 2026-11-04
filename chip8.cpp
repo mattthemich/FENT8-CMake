@@ -158,13 +158,14 @@ namespace chip8 {
                     //ADD VX, VY
                     case 0x04:
                         result = V[nib2] + V[nib3];
-                        V[nib2] = result;
 
                         if ((short)V[nib2] + (short)V[nib3] > 255) {
                             V[0XF] = 1;
                         }else {
                             V[0XF] = 0;
                         }
+
+                        if (nib2 != 15) V[nib2] = result;
 
                         break;
 
@@ -178,7 +179,7 @@ namespace chip8 {
                             V[15] = 0;
                         }
 
-                        if (nib2 < 15) V[nib2] = result;
+                        if (nib2 != 15) V[nib2] = result;
                         break;
 
                     //SHR VX {1, VY}

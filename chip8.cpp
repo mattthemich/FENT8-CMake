@@ -9,6 +9,10 @@
 
 namespace chip8 {
     //General
+
+    /**
+     * The default constructor for the CHIP-8 object. Needs no arguments.
+     */
     chip8::chip8() {
         chip8::opcode = 0;
         chip8::memory[4096] = {0};
@@ -22,17 +26,133 @@ namespace chip8 {
         chip8::sp = 0;
         chip8::key[16] = {0};
         chip8::draw_flag = false;
-        chip8::c1 = 0xFF6DE36F;
-        chip8::c2 = 0xFF244924;
+        chip8::c2 = 0xFF6DE36F;
+        chip8::c1 = 0xFF244924;
+        chip8::emu_speed = 700;
+        chip8::quit_flag = false;
     }
 
+    /**
+     * Default destructor. Currently does nothing.
+     */
     chip8::~chip8() = default;
 
+    /**
+     * Emulates one cycle of the CHIP-8.
+     *
+     * This includes grabbing an opcode from the ram at the PC, and running certain commands based on that opcode.
+     *
+     * Afterwards it will increase the PC by one and end the cycle.
+     */
     void chip8::emulate_cycle() {
-        //todo
+        //Grabs the current opcode from memory
+        chip8::opcode = chip8::read_mem(chip8::pc) << 8 | chip8::read_mem(chip8::pc + 1);
+        chip8::pc += 2;
+
+        //Splits opcode into 4 nibbles
+        unsigned short nib1 = chip8::opcode >> 12;
+        unsigned short nib2 = chip8::opcode >> 8 & 0x000F;
+        unsigned short nib3 = chip8::opcode >> 4 & 0x000F;
+        unsigned short nib4 = chip8::opcode & 0x000F;
+
+        switch (nib1) {
+            //Handles CLS and RET (and SYSCALL, but that is unimplemented)
+            case 0x00:
+                switch (opcode) {
+                    //CLS
+                    case 0x00E0:
+                        for (int i = 0; i < (64*32); i++) {
+                            screen[i] = 0x00;
+                        }
+                        draw_flag = true;
+                        break;
+
+                    //RET
+                    case 0x00EE:
+                        pc = stack[sp];
+                        if (sp > 0) {
+                            sp --;
+                        }
+                        break;
+
+                    default:
+                        std::cout << "ERROR: Unknown opcode " << std::hex << opcode << "; Ending program...\n";
+                        quit_flag = true;
+                        break;
+                }
+                break;
+
+            //Literally just the JMP command
+            case 0x01:
+                pc = opcode & 0x0FFF;
+                break;
+
+            //LD VX
+            case 0x06:
+                V[nib2] = (nib3 << 4 | nib4);
+                break;
+
+            //ADD VX, BYTE
+            case 0x07:
+                V[nib2] = V[nib2] + (nib3 << 4 | nib4);
+                break;
+
+            //LD I, ADDR
+            case 0x0A:
+                I = opcode & 0x0FFF;
+                break;
+
+            //DRAW
+            case 0x0D:
+                //Loops through each byte in the sprite
+                for (int i = 0; i < nib4; i++) {
+                    unsigned char byte = read_mem(I+i);
+
+                    //Loops through each bit in the byte, XOR it with the screen
+                    for (int j = 0; j < 8; j++) {
+                        unsigned char bit = (byte >> (7 - j)) & 0b00000001;
+                        unsigned int draw_x = (V[nib2] + j);
+                        unsigned int draw_y = (V[nib3] + i);
+                        unsigned char new_bit = bit ^ screen[((draw_x % 64) + ((draw_y % 32) * 64))];
+                        screen[((draw_x % 64) + ((draw_y % 32) * 64))] = new_bit;
+
+                        if (bit == 1 && new_bit == 0) {
+                            V[15] = 1;
+                        }
+                    }
+
+                    draw_flag = true;
+                }
+
+                break;
+
+            default:
+                std::cout << "ERROR: Unknown Opcode " << std::hex << opcode << "; Ending program...\n";
+                quit_flag = true;
+                break;
+        }
+    }
+
+    /**
+     *
+     * @return true only if an illegal operation runs
+     */
+    bool chip8::get_quit_flag() {
+        return quit_flag;
+    }
+
+    /**
+     * Returns the emulation speed of the CHIP-8 object.
+     * @return The amount of cycles that should run in 1 second as an unsigned integer.
+     */
+    unsigned int chip8::get_emu_speed() {
+        return chip8::emu_speed;
     }
 
     //Memory Operations
+    /**
+     * Loads the default font into memory.
+     */
     void chip8::load_fonts() {
         unsigned char fonts[80] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0,   //0
@@ -58,6 +178,10 @@ namespace chip8 {
         }
     }
 
+    /**
+     * Loads a .ch8 file into memory starting at 0x200.
+     * @param filepath Should be the filepath leading to a .ch8 file.
+     */
     void chip8::load_game(char *filepath) {
         //Open the ifstream for a read-only file
         std::ifstream game(filepath, std::ios::binary | std::ios::ate);
@@ -87,6 +211,11 @@ namespace chip8 {
         }
     }
 
+    /**
+     * Returns a character value from the CHIP-8's memory.
+     * @param addr The address in memory to grab the value from
+     * @return The char value kept inside addr.
+     */
     unsigned char chip8::read_mem(unsigned int addr) {
         return memory[addr];
     }

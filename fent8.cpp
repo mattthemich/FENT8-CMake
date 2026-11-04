@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <time.h>
 
 #include "chip8.h"
 
@@ -37,10 +38,10 @@ void set_arguments(int argc, char* argv[]) {
             try {
                 int scale = std::stoi(orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1)));
                 res = scale;
-            }catch (std::invalid_argument error) {
+            }catch (const std::invalid_argument& error) {
                 std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
                 res = 20;
-            }catch (std::out_of_range error) {
+            }catch (const std::out_of_range& error) {
                 std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
                 res = 20;
             }
@@ -63,7 +64,7 @@ void set_arguments(int argc, char* argv[]) {
                     }catch (const std::invalid_argument& errorCode) {
                         std::cerr << "Error: invalid scaling size. Defaulting to 640 x 320.\n";
                         res = 20;
-                    }catch (std::out_of_range error) {
+                    }catch (const std::out_of_range& error) {
                         std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
                         res = 20;
                     }
@@ -156,15 +157,13 @@ int main(int argc, char* argv[]) {
 
     //Create an event handler so you can quit
     SDL_Event e;
-    bool quit = false;
+    bool quit = no_games;
 
-    //CHIP8 Screen Test (and load game if needed)
-    fent8.test_pattern();
-
-    if (game_path != nullptr) {
+    //Load Chip8 Game
+    if (!no_games) {
         fent8.load_game(game_path);
     }else {
-        std::cout << "No game path specified. Exiting...\n";
+        std::cout << "No valid game path specified. Exiting...\n";
         quit = true;
     }
 
@@ -175,6 +174,11 @@ int main(int argc, char* argv[]) {
             if (e.type == SDL_EVENT_QUIT) {
                 quit = true;
             }
+        }
+
+        fent8.emulate_cycle();
+        if (fent8.get_quit_flag()) {
+            quit = true;
         }
 
         //Render the FUCKINGGGGG screen
@@ -189,6 +193,7 @@ int main(int argc, char* argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    fent8.~chip8();
     delete[] game_path;
 
     return 0;

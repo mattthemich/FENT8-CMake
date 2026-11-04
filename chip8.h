@@ -8,6 +8,8 @@ namespace chip8 {
         chip8();                            //Initializes the chip8 emulator
         ~chip8();                           //Obliterate the chip8
         void emulate_cycle();               //Emulates one cycle of the CPU
+        unsigned int get_emu_speed();       //Get the speed for the
+        bool get_quit_flag();
 
         //Memory operations
         void load_fonts();                                      //Loads the fonts into memory
@@ -44,6 +46,8 @@ namespace chip8 {
         bool draw_flag;                 //Set to true if the window should be updated
         unsigned int c1;                //Color 1 for the palette
         unsigned int c2;                //Color 2 for the palette
+        unsigned int emu_speed;         //CPU Cycles per second (default is 700 hz)
+        bool quit_flag;                 //Set to true if an illegal operation is ran
     };
 } // chip8
 

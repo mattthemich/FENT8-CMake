@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <time.h>
 
 #include "chip8.h"
 
@@ -169,14 +168,164 @@ int main(int argc, char* argv[]) {
 
     //Main Loop
     while (!quit) {
-        //Checks if the user has quit or not
+        //Checks inputs
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_EVENT_QUIT) {
                 quit = true;
+            }else if (e.type == SDL_EVENT_KEY_DOWN) {
+                switch (e.key.key) {
+                    case SDLK_1:
+                        fent8.set_key_state(0x00, 1);
+                        break;
+
+                    case SDLK_2:
+                        fent8.set_key_state(0x01, 1);
+                        break;
+
+                    case SDLK_3:
+                        fent8.set_key_state(0x02, 1);
+                        break;
+
+                    case SDLK_4:
+                        fent8.set_key_state(0x03, 1);
+                        break;
+
+                    case SDLK_Q:
+                        fent8.set_key_state(0x04, 1);
+                        break;
+
+                    case SDLK_W:
+                        fent8.set_key_state(0x05, 1);
+                        break;
+
+                    case SDLK_E:
+                        fent8.set_key_state(0x06, 1);
+                        break;
+
+                    case SDLK_R:
+                        fent8.set_key_state(0x07, 1);
+                        break;
+
+                    case SDLK_A:
+                        fent8.set_key_state(0x08, 1);
+                        break;
+
+                    case SDLK_S:
+                        fent8.set_key_state(0x09, 1);
+                        break;
+
+                    case SDLK_D:
+                        fent8.set_key_state(0x0A, 1);
+                        break;
+
+                    case SDLK_F:
+                        fent8.set_key_state(0x0B, 1);
+                        break;
+
+                    case SDLK_Z:
+                        fent8.set_key_state(0x0C, 1);
+                        break;
+
+                    case SDLK_X:
+                        fent8.set_key_state(0x0D, 1);
+                        break;
+
+                    case SDLK_C:
+                        fent8.set_key_state(0x0E, 1);
+                        break;
+
+                    case SDLK_V:
+                        fent8.set_key_state(0x0F, 1);
+                        break;
+
+                    default:
+                        break;
+                }
+            }else if (e.type == SDL_EVENT_KEY_UP) {
+                switch (e.key.key) {
+                    case SDLK_1:
+                        fent8.set_key_state(0x00, 0);
+                        break;
+
+                    case SDLK_2:
+                        fent8.set_key_state(0x01, 0);
+                        break;
+
+                    case SDLK_3:
+                        fent8.set_key_state(0x02, 0);
+                        break;
+
+                    case SDLK_4:
+                        fent8.set_key_state(0x03, 0);
+                        break;
+
+                    case SDLK_Q:
+                        fent8.set_key_state(0x04, 0);
+                        break;
+
+                    case SDLK_W:
+                        fent8.set_key_state(0x05, 0);
+                        break;
+
+                    case SDLK_E:
+                        fent8.set_key_state(0x06, 0);
+                        break;
+
+                    case SDLK_R:
+                        fent8.set_key_state(0x07, 0);
+                        break;
+
+                    case SDLK_A:
+                        fent8.set_key_state(0x08, 0);
+                        break;
+
+                    case SDLK_S:
+                        fent8.set_key_state(0x09, 0);
+                        break;
+
+                    case SDLK_D:
+                        fent8.set_key_state(0x0A, 0);
+                        break;
+
+                    case SDLK_F:
+                        fent8.set_key_state(0x0B, 0);
+                        break;
+
+                    case SDLK_Z:
+                        fent8.set_key_state(0x0C, 0);
+                        break;
+
+                    case SDLK_X:
+                        fent8.set_key_state(0x0D, 0);
+                        break;
+
+                    case SDLK_C:
+                        fent8.set_key_state(0x0E, 0);
+                        break;
+
+                    case SDLK_V:
+                        fent8.set_key_state(0x0F, 0);
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
 
-        fent8.emulate_cycle();
+        //Slows the emulation down to ~11 operations per frame
+        Uint64 cycle_start = SDL_GetTicks();
+        for (int i = 0; i < fent8.get_emu_speed() / 60; i++) {
+            fent8.emulate_cycle();
+            if (fent8.get_quit_flag()) break;
+        }
+        Uint64 current_ticks = SDL_GetTicks();
+        while ((current_ticks - cycle_start) < 1000 / 60) {
+            current_ticks = SDL_GetTicks();
+        }
+        fent8.decrement_delay();
+        fent8.decrement_sound();
+
         if (fent8.get_quit_flag()) {
             quit = true;
         }

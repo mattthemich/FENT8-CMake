@@ -2,8 +2,10 @@
 // Created by fent on 10/27/26.
 //
 
+#include <stdlib.h>
 #include <fstream>
 #include "chip8.h"
+#include <random>
 
 #include <iostream>
 
@@ -28,7 +30,7 @@ namespace chip8 {
         chip8::draw_flag = false;
         chip8::c2 = 0xFF6DE36F;
         chip8::c1 = 0xFF244924;
-        chip8::emu_speed = 700;
+        chip8::emu_speed = 1400;
         chip8::quit_flag = false;
     }
 
@@ -48,12 +50,17 @@ namespace chip8 {
         //Grabs the current opcode from memory
         chip8::opcode = chip8::read_mem(chip8::pc) << 8 | chip8::read_mem(chip8::pc + 1);
         chip8::pc += 2;
+        //std::cout << std::hex << chip8::opcode << std::endl;      //Uncomment for opcode debugging
 
         //Splits opcode into 4 nibbles
         unsigned short nib1 = chip8::opcode >> 12;
         unsigned short nib2 = chip8::opcode >> 8 & 0x000F;
         unsigned short nib3 = chip8::opcode >> 4 & 0x000F;
         unsigned short nib4 = chip8::opcode & 0x000F;
+
+        //Only used for case functions
+        bool none_pressed = true;
+        unsigned char result;
 
         switch (nib1) {
             //Handles CLS and RET (and SYSCALL, but that is unimplemented)
@@ -69,10 +76,10 @@ namespace chip8 {
 
                     //RET
                     case 0x00EE:
-                        pc = stack[sp];
                         if (sp > 0) {
                             sp --;
                         }
+                        pc = stack[sp];
                         break;
 
                     default:
@@ -87,6 +94,34 @@ namespace chip8 {
                 pc = opcode & 0x0FFF;
                 break;
 
+            //CALL addr
+            case 0x02:
+                stack[sp] = pc;
+                sp++;
+                pc = opcode & 0x0FFF;
+                break;
+
+            //SE VX, byte
+            case 0x03:
+                if (V[nib2] == ((nib3 << 4) | nib4)){
+                    pc += 2;
+                }
+                break;
+
+            //SNE VX, byte
+            case 0x04:
+                if (V[nib2] != ((nib3 << 4) | nib4)){
+                    pc += 2;
+                }
+                break;
+
+            //SE VX, VY
+            case 0x05:
+                if (V[nib2] == V[nib3]) {
+                    pc += 2;
+                }
+                break;
+
             //LD VX
             case 0x06:
                 V[nib2] = (nib3 << 4 | nib4);
@@ -97,9 +132,109 @@ namespace chip8 {
                 V[nib2] = V[nib2] + (nib3 << 4 | nib4);
                 break;
 
+            //8xyn cases, there's a lot of these
+            case 0x08:
+                switch (nib4) {
+                    //LD VX, VY
+                    case 0x00:
+                        V[nib2] = V[nib3];
+                        break;
+
+                    //OR VX, VY
+                    case 0x01:
+                        V[nib2] = V[nib2] | V[nib3];
+                        break;
+
+                    //AND VX, VY
+                    case 0x02:
+                        V[nib2] = V[nib2] & V[nib3];
+                        break;
+
+                    //XOR VX, VY
+                    case 0x03:
+                        V[nib2] = V[nib2] ^ V[nib3];
+                        break;
+
+                    //ADD VX, VY
+                    case 0x04:
+                        result = V[nib2] + V[nib3];
+                        V[nib2] = result;
+
+                        if ((short)V[nib2] + (short)V[nib3] > 255) {
+                            V[0XF] = 1;
+                        }else {
+                            V[0XF] = 0;
+                        }
+
+                        break;
+
+                    //SUB VX, VY
+                    case 0x05:
+                        result = V[nib2] - V[nib3];
+
+                        if (V[nib2] > V[nib3]) {
+                            V[15] = 1;
+                        }else {
+                            V[15] = 0;
+                        }
+
+                        if (nib2 < 15) V[nib2] = result;
+                        break;
+
+                    //SHR VX {1, VY}
+                    case 0x06:
+                        V[15] = V[nib2] & 1;
+                        V[nib2] /= 2;
+                        break;
+
+                    //SUBN VX, VY
+                    case 0x07:
+                        if (V[nib3] > V[nib2]) {
+                            V[15] = 1;
+                        }else {
+                            V[15] = 0;
+                        }
+
+                        V[nib2] = V[nib3] - V[nib2];
+                        break;
+
+                    //SHL VX {1, VY}
+                    case 0x0E:
+                        V[15] = (V[nib2] & 0b10000000) >> 7;
+                        V[nib2] *= 2;
+                        break;
+
+                    default:
+                        std::cout << "ERROR: Unknown opcode " << std::hex << opcode << "; Ending program...\n";
+                        quit_flag = true;
+                        break;
+
+                    break;
+
+                }
+
+                break;
+
+            //SNE VX, VY
+            case 0x09:
+                if (V[nib2] != V[nib3]) {
+                    pc += 2;
+                }
+                break;
+
             //LD I, ADDR
             case 0x0A:
                 I = opcode & 0x0FFF;
+                break;
+
+            //JP V0, ADDR
+            case 0x0B:
+                pc = (opcode & 0x0FFF) + V[0];
+                break;
+
+            //RND VX, BYTE
+            case 0x0C:
+                V[nib2] = ((rd() % 255) & ((char)(nib3 << 4) | nib4));
                 break;
 
             //DRAW
@@ -126,6 +261,97 @@ namespace chip8 {
 
                 break;
 
+            //Input Calls
+            case 0x0E:
+                switch ((nib3 << 4) | nib4) {
+                    //SKP VX
+                    case 0x9E:
+                        if (V[nib2] > 0) pc += 2;
+                        break;
+
+                    //SKNP VX
+                    case 0xA1:
+                        if (V[nib2] == 0) pc += 2;
+                        break;
+
+                    default:
+                        std::cout << "ERROR: Unknown opcode " << std::hex << opcode << "; Ending program...\n";
+                        quit_flag = true;
+                        break;
+                }
+
+                break;
+
+            case 0x0F:
+                switch ((nib3 << 4) | nib4) {
+                    //LD VX, DT
+                    case 0x07:
+                        V[nib2] = delay_timer;
+                        break;
+
+                    //LD VX, K
+                    case 0x0A:
+                        for (char i = 0; i < 16; i++) {
+                            if (key[i] > 0 && none_pressed == true) {
+                                V[nib2] = i;
+                                none_pressed = false;
+                            }
+                        }
+
+                        if (none_pressed) {
+                            pc -= 2;
+                        }
+                        break;
+
+                    //LD DT, VX
+                    case 0x15:
+                        delay_timer = V[nib2];
+                        break;
+
+                    //LD ST, VX
+                    case 0x18:
+                        sound_timer = V[nib2];
+                        break;
+
+                    //ADD I, VX
+                    case 0x1E:
+                        I += V[nib2];
+                        break;
+
+                    //LD F, VX
+                    case 0x29:
+                        I = FONT_ADDRESS + (5 * V[nib2]);
+                        break;
+
+                    //LD B, VX
+                    case 0x33:
+                        memory[I] = V[nib2] / 100;
+                        memory[I+1] = ((V[nib2] - (memory[I] * 100)) / 10);
+                        memory[I+2] = V[nib2] - (memory[I] * 100) - (memory[I+1] * 10);
+                        break;
+
+                    //LD I, VX
+                    case 0x55:
+                        for (int i = 0; i < nib2 + 1; i++) {
+                            memory[I+i] = V[i];
+                        }
+                        break;
+
+                    //LD VX, I
+                    case 0x65:
+                        for (int i = 0; i < nib2 + 1; i++) {
+                            V[i] = memory[I+i];
+                        }
+                        break;
+
+                    default:
+                        std::cout << "ERROR: Unknown opcode " << std::hex << opcode << "; Ending program...\n";
+                        quit_flag = true;
+                        break;
+                }
+
+                break;
+
             default:
                 std::cout << "ERROR: Unknown Opcode " << std::hex << opcode << "; Ending program...\n";
                 quit_flag = true;
@@ -147,6 +373,11 @@ namespace chip8 {
      */
     unsigned int chip8::get_emu_speed() {
         return chip8::emu_speed;
+    }
+
+    //Input Operations
+    void chip8::set_key_state(int key, unsigned char val) {
+        V[key % 16] = val;
     }
 
     //Memory Operations
@@ -262,6 +493,19 @@ namespace chip8 {
                 unsigned char mod = ((i%2)+(j%2))%2;
                 set_pixel(i, j, mod);
             }
+        }
+    }
+
+    //Timer Operations
+    void chip8::decrement_delay() {
+        if (delay_timer > 0) {
+            delay_timer--;
+        }
+    }
+
+    void chip8::decrement_sound() {
+        if (sound_timer > 0) {
+            sound_timer--;
         }
     }
 } // chip8

@@ -173,7 +173,7 @@ namespace chip8 {
                     case 0x05:
                         result = V[nib2] - V[nib3];
 
-                        if (V[nib2] > V[nib3]) {
+                        if (V[nib2] >= V[nib3]) {
                             V[15] = 1;
                         }else {
                             V[15] = 0;
@@ -185,24 +185,26 @@ namespace chip8 {
                     //SHR VX {1, VY}
                     case 0x06:
                         V[15] = V[nib2] & 1;
-                        V[nib2] /= 2;
+                        if (nib2 != 15) V[nib2] /= 2;
                         break;
 
                     //SUBN VX, VY
                     case 0x07:
-                        if (V[nib3] > V[nib2]) {
+                        result = V[nib3] - V[nib2];
+
+                        if (V[nib3] >= V[nib2]) {
                             V[15] = 1;
                         }else {
                             V[15] = 0;
                         }
 
-                        V[nib2] = V[nib3] - V[nib2];
+                        if (nib2 != 15) V[nib2] = result;
                         break;
 
                     //SHL VX {1, VY}
                     case 0x0E:
                         V[15] = (V[nib2] & 0b10000000) >> 7;
-                        V[nib2] *= 2;
+                        if (nib2 != 15) V[nib2] *= 2;
                         break;
 
                     default:
@@ -267,12 +269,12 @@ namespace chip8 {
                 switch ((nib3 << 4) | nib4) {
                     //SKP VX
                     case 0x9E:
-                        if (V[nib2] > 0) pc += 2;
+                        if (key[V[nib2]] == 1) pc += 2;
                         break;
 
                     //SKNP VX
                     case 0xA1:
-                        if (V[nib2] == 0) pc += 2;
+                        if (key[V[nib2]] == 0) pc += 2;
                         break;
 
                     default:
@@ -377,8 +379,8 @@ namespace chip8 {
     }
 
     //Input Operations
-    void chip8::set_key_state(int key, unsigned char val) {
-        V[key % 16] = val;
+    void chip8::set_key_state(int k, unsigned char val) {
+        key[k % 16] = val;
     }
 
     //Memory Operations
@@ -478,7 +480,7 @@ namespace chip8 {
     }
 
     void chip8::set_draw_flag(bool flag) {
-        chip8::draw_flag = flag;
+        this->draw_flag = flag;
     }
 
     void chip8::set_pixel(int x, int y, unsigned char val) {
@@ -500,12 +502,14 @@ namespace chip8 {
     //Timer Operations
     void chip8::decrement_delay() {
         if (delay_timer > 0) {
+            //std::cout << "Delay Decremented to " << std::hex << delay_timer << std::endl;
             delay_timer--;
         }
     }
 
     void chip8::decrement_sound() {
         if (sound_timer > 0) {
+            //std::cout << "Sound Decremented to " << std::hex << delay_timer << std::endl;
             sound_timer--;
         }
     }

@@ -11,6 +11,7 @@ namespace chip8 {
         void emulate_cycle();               //Emulates one cycle of the CPU
         unsigned int get_emu_speed();       //Get the speed for the
         bool get_quit_flag();               //Gets value of bool flag
+        void set_yshift(bool flag);
 
         //Input
         void set_key_state(int key, unsigned char val);
@@ -64,6 +65,7 @@ namespace chip8 {
         unsigned int emu_speed;         //CPU Cycles per second (default is 700 hz)
         bool quit_flag;                 //Set to true if an illegal operation is ran
         std::random_device rd;          //Used for randomness
+        bool y_shift;                   //Determines the behavior of the 8xy6 and 8xyE opcodes
     };
 } // chip8
 

@@ -161,6 +161,7 @@ int main(int argc, char* argv[]) {
     //Load Chip8 Game
     if (!no_games) {
         fent8.load_game(game_path);
+        fent8.set_yshift(true);
     }else {
         std::cout << "No valid game path specified. Exiting...\n";
         quit = true;
@@ -175,22 +176,22 @@ int main(int argc, char* argv[]) {
             }else if (e.type == SDL_EVENT_KEY_DOWN) {
                 switch (e.key.key) {
                     case SDLK_1:
-                        fent8.set_key_state(0x00, 1);
+                        fent8.set_key_state(0x01, 1);
                         //std::cout << "Key 1 Pressed!" << std::endl;
                         break;
 
                     case SDLK_2:
-                        fent8.set_key_state(0x01, 1);
+                        fent8.set_key_state(0x02, 1);
                         //std::cout << "Key 2 Pressed!" << std::endl;
                         break;
 
                     case SDLK_3:
-                        fent8.set_key_state(0x02, 1);
+                        fent8.set_key_state(0x03, 1);
                         //std::cout << "Key 3 Pressed!" << std::endl;
                         break;
 
                     case SDLK_4:
-                        fent8.set_key_state(0x03, 1);
+                        fent8.set_key_state(0x0C, 1);
                         //std::cout << "Key C Pressed!" << std::endl;
                         break;
 
@@ -210,42 +211,42 @@ int main(int argc, char* argv[]) {
                         break;
 
                     case SDLK_R:
-                        fent8.set_key_state(0x07, 1);
+                        fent8.set_key_state(0x0D, 1);
                         //std::cout << "Key D Pressed!" << std::endl;
                         break;
 
                     case SDLK_A:
-                        fent8.set_key_state(0x08, 1);
+                        fent8.set_key_state(0x07, 1);
                         //std::cout << "Key 7 Pressed!" << std::endl;
                         break;
 
                     case SDLK_S:
-                        fent8.set_key_state(0x09, 1);
+                        fent8.set_key_state(0x08, 1);
                         //std::cout << "Key 8 Pressed!" << std::endl;
                         break;
 
                     case SDLK_D:
-                        fent8.set_key_state(0x0A, 1);
+                        fent8.set_key_state(0x09, 1);
                         //std::cout << "Key 9 Pressed!" << std::endl;
                         break;
 
                     case SDLK_F:
-                        fent8.set_key_state(0x0B, 1);
+                        fent8.set_key_state(0x0E, 1);
                         //std::cout << "Key E Pressed!" << std::endl;
                         break;
 
                     case SDLK_Z:
-                        fent8.set_key_state(0x0C, 1);
+                        fent8.set_key_state(0x0A, 1);
                         //std::cout << "Key A Pressed!" << std::endl;
                         break;
 
                     case SDLK_X:
-                        fent8.set_key_state(0x0D, 1);
+                        fent8.set_key_state(0x00, 1);
                         //std::cout << "Key 0 Pressed!" << std::endl;
                         break;
 
                     case SDLK_C:
-                        fent8.set_key_state(0x0E, 1);
+                        fent8.set_key_state(0x0B, 1);
                         //std::cout << "Key B Pressed!" << std::endl;
                         break;
 
@@ -260,22 +261,22 @@ int main(int argc, char* argv[]) {
             }else if (e.type == SDL_EVENT_KEY_UP) {
                 switch (e.key.key) {
                     case SDLK_1:
-                        fent8.set_key_state(0x00, 0);
+                        fent8.set_key_state(0x01, 0);
                         //std::cout << "Key 1 Released!" << std::endl;
                         break;
 
                     case SDLK_2:
-                        fent8.set_key_state(0x01, 0);
+                        fent8.set_key_state(0x02, 0);
                         //std::cout << "Key 2 Released!" << std::endl;
                         break;
 
                     case SDLK_3:
-                        fent8.set_key_state(0x02, 0);
+                        fent8.set_key_state(0x03, 0);
                         //std::cout << "Key 3 Released!" << std::endl;
                         break;
 
                     case SDLK_4:
-                        fent8.set_key_state(0x03, 0);
+                        fent8.set_key_state(0x0C, 0);
                         //std::cout << "Key C Released!" << std::endl;
                         break;
 
@@ -295,42 +296,42 @@ int main(int argc, char* argv[]) {
                         break;
 
                     case SDLK_R:
-                        fent8.set_key_state(0x07, 0);
+                        fent8.set_key_state(0x0D, 0);
                         //std::cout << "Key D Released!" << std::endl;
                         break;
 
                     case SDLK_A:
-                        fent8.set_key_state(0x08, 0);
+                        fent8.set_key_state(0x07, 0);
                         //std::cout << "Key 7 Released!" << std::endl;
                         break;
 
                     case SDLK_S:
-                        fent8.set_key_state(0x09, 0);
+                        fent8.set_key_state(0x08, 0);
                         //std::cout << "Key 8 Released!" << std::endl;
                         break;
 
                     case SDLK_D:
-                        fent8.set_key_state(0x0A, 0);
+                        fent8.set_key_state(0x09, 0);
                         //std::cout << "Key 9 Released!" << std::endl;
                         break;
 
                     case SDLK_F:
-                        fent8.set_key_state(0x0B, 0);
+                        fent8.set_key_state(0x0E, 0);
                         //std::cout << "Key E Released!" << std::endl;
                         break;
 
                     case SDLK_Z:
-                        fent8.set_key_state(0x0C, 0);
+                        fent8.set_key_state(0x0A, 0);
                         //std::cout << "Key A Released!" << std::endl;
                         break;
 
                     case SDLK_X:
-                        fent8.set_key_state(0x0D, 0);
+                        fent8.set_key_state(0x00, 0);
                         //std::cout << "Key 0 Released!" << std::endl;
                         break;
 
                     case SDLK_C:
-                        fent8.set_key_state(0x0E, 0);
+                        fent8.set_key_state(0x0B, 0);
                         //std::cout << "Key B Released!" << std::endl;
                         break;
 
@@ -345,11 +346,12 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        //Slows the emulation down to ~11 operations per frame
+        //Slows the emulation down to ~11 operations per frame (if ops per second is 700)
         Uint64 cycle_start = SDL_GetTicks();
         for (int i = 0; i < fent8.get_emu_speed() / 60; i++) {
             fent8.emulate_cycle();
             if (fent8.get_quit_flag()) break;
+            if (fent8.get_draw_flag()) break;
         }
         Uint64 current_ticks = SDL_GetTicks();
         while ((current_ticks - cycle_start) < 1000 / 60) {

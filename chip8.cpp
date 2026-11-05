@@ -30,8 +30,9 @@ namespace chip8 {
         chip8::draw_flag = false;
         chip8::c2 = 0xFF6DE36F;
         chip8::c1 = 0xFF244924;
-        chip8::emu_speed = 1400;
+        chip8::emu_speed = 700;
         chip8::quit_flag = false;
+        chip8::y_shift = false;
     }
 
     /**
@@ -143,16 +144,19 @@ namespace chip8 {
                     //OR VX, VY
                     case 0x01:
                         V[nib2] = V[nib2] | V[nib3];
+                        V[15] = 0;
                         break;
 
                     //AND VX, VY
                     case 0x02:
                         V[nib2] = V[nib2] & V[nib3];
+                        V[15] = 0;
                         break;
 
                     //XOR VX, VY
                     case 0x03:
                         V[nib2] = V[nib2] ^ V[nib3];
+                        V[15] = 0;
                         break;
 
                     //ADD VX, VY
@@ -184,8 +188,13 @@ namespace chip8 {
 
                     //SHR VX {1, VY}
                     case 0x06:
-                        V[15] = V[nib2] & 1;
-                        if (nib2 != 15) V[nib2] /= 2;
+                        if (y_shift) {
+                            V[15] = V[nib3] & 1;
+                            if (nib2 != 15) V[nib2] = V[nib3] / 2;
+                        }else {
+                            V[15] = V[nib2] & 1;
+                            if (nib2 != 15) V[nib2] /= 2;
+                        }
                         break;
 
                     //SUBN VX, VY
@@ -203,8 +212,13 @@ namespace chip8 {
 
                     //SHL VX {1, VY}
                     case 0x0E:
-                        V[15] = (V[nib2] & 0b10000000) >> 7;
-                        if (nib2 != 15) V[nib2] *= 2;
+                        if (y_shift) {
+                            V[15] = (V[nib3] & 0b10000000) >> 7;
+                            if (nib2 != 15) V[nib2] = V[nib3] * 2;
+                        }else {
+                            V[15] = (V[nib2] & 0b10000000) >> 7;
+                            if (nib2 != 15) V[nib2] *= 2;
+                        }
                         break;
 
                     default:
@@ -249,10 +263,10 @@ namespace chip8 {
                     //Loops through each bit in the byte, XOR it with the screen
                     for (int j = 0; j < 8; j++) {
                         unsigned char bit = (byte >> (7 - j)) & 0b00000001;
-                        unsigned int draw_x = (V[nib2] + j);
-                        unsigned int draw_y = (V[nib3] + i);
-                        unsigned char new_bit = bit ^ screen[((draw_x % 64) + ((draw_y % 32) * 64))];
-                        screen[((draw_x % 64) + ((draw_y % 32) * 64))] = new_bit;
+                        unsigned int draw_x = ((V[nib2] % 64) + j);
+                        unsigned int draw_y = ((V[nib3] % 32) + i);
+                        unsigned char new_bit = bit ^ screen[(draw_x + (draw_y * 64))];
+                        screen[(draw_x + (draw_y * 64))] = new_bit;
 
                         if (bit == 1 && new_bit == 0) {
                             V[15] = 1;
@@ -336,14 +350,16 @@ namespace chip8 {
                     //LD I, VX
                     case 0x55:
                         for (int i = 0; i < nib2 + 1; i++) {
-                            memory[I+i] = V[i];
+                            memory[I] = V[i];
+                            I++;
                         }
                         break;
 
                     //LD VX, I
                     case 0x65:
                         for (int i = 0; i < nib2 + 1; i++) {
-                            V[i] = memory[I+i];
+                            V[i] = memory[I];
+                            I++;
                         }
                         break;
 
@@ -376,6 +392,14 @@ namespace chip8 {
      */
     unsigned int chip8::get_emu_speed() {
         return chip8::emu_speed;
+    }
+
+    /**
+     * Determines whether SHR and SHL operates only on VX (false), or on VY and VX (true)
+     * @param flag The value for yshift.
+     */
+    void chip8::set_yshift(bool flag) {
+        y_shift = flag;
     }
 
     //Input Operations

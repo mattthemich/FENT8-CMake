@@ -256,6 +256,7 @@ namespace chip8 {
 
             //DRAW
             case 0x0D:
+                V[15] = 0;
                 //Loops through each byte in the sprite
                 for (int i = 0; i < nib4; i++) {
                     unsigned char byte = read_mem(I+i);
@@ -265,11 +266,14 @@ namespace chip8 {
                         unsigned char bit = (byte >> (7 - j)) & 0b00000001;
                         unsigned int draw_x = ((V[nib2] % 64) + j);
                         unsigned int draw_y = ((V[nib3] % 32) + i);
-                        unsigned char new_bit = bit ^ screen[(draw_x + (draw_y * 64))];
-                        screen[(draw_x + (draw_y * 64))] = new_bit;
+                        if (draw_x + (draw_y * 64) < ((draw_y+1) * 64) && draw_y < 32) {
+                            unsigned char new_bit = bit ^ screen[(draw_x + (draw_y * 64))];
 
-                        if (bit == 1 && new_bit == 0) {
-                            V[15] = 1;
+                            if (bit == 1 && screen[draw_x + (draw_y * 64)] == 1 && new_bit == 0) {
+                                V[15] = 1;
+                            }
+
+                            screen[(draw_x + (draw_y * 64))] = new_bit;
                         }
                     }
 

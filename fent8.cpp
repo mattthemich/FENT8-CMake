@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <ostream>
 #include <ranges>
@@ -19,8 +20,10 @@ static int gDone;
 bool no_games;
 
 //CMD arguments
-static int res;             //First Argument, sets resolution of screen; RES=20
-static char* game_path;     //filepath of game; GAME_PATH="/home/user/Downloads/game name.ch8"
+static int res;                     //First Argument, sets resolution of screen; RES=20
+static char* game_path;             //filepath of game; GAME_PATH="/home/user/Downloads/game name.ch8"
+static bool y_shift = true;         //Sets how bit-shift ops work
+static bool vblank = false;         //Makes draw opcode wait for VBlank; limits to 60 sprites/second
 
 void set_arguments(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
@@ -53,28 +56,49 @@ void set_arguments(int argc, char* argv[]) {
             }else {
                 no_games = true;
             }
-        }else {
-            //If the variable is not specified
-            switch (i) {
-                case 1:
-                    try {
-                        res = std::stoi(argv[1]);
-                        std::cout << "Using scaling number " << res << "\n";
-                    }catch (const std::invalid_argument& errorCode) {
-                        std::cerr << "Error: invalid scaling size. Defaulting to 640 x 320.\n";
-                        res = 20;
-                    }catch (const std::out_of_range& error) {
-                        std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
-                        res = 20;
-                    }
+        }else if (arg_type == "Y_SHIFT") {
+            try {
+                int shift = std::stoi(orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1)));
+                if (shift > 0) {
+                    y_shift = true;
+                }else {
+                    y_shift = false;
+                }
+            }catch (const std::invalid_argument& error) {
+                std::cerr << "Error: invalid y_shift value. Defaulting to on.\n";
+            }catch (const std::out_of_range& error) {
+                std::cerr << "Error: invalid y_shift value. Defaulting to on.\n";
+            }
+        }else if (arg_type == "PALETTE") {
+            std::string path = orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1));
+            if (std::filesystem::exists(path)) {
+                //Read in palette data
+                std::ifstream file(path);
 
-                case 2:
-                    if (std::filesystem::exists(argv[2])) {
-                        game_path = argv[2];
-                        no_games = false;
-                    }else {
-                        no_games = true;
-                    }
+                if (file.is_open()) {
+                    //Read string into whole variable
+                    std::string whole;
+                    getline(file, whole);
+                    file.close();
+
+                    //Split string into 2 parts, extract unsigned ints from string
+                    std::string delimiter = ",";
+                    std::string s1 = whole.substr(0, whole.find(delimiter));
+                    std::string s2 = whole.substr(whole.find(delimiter) + 1, whole.size() - (s1.size() + 1));
+
+                    fent8.set_palette(std::stoul(s1, nullptr, 16), std::stoul(s2, nullptr, 16));
+                }
+            }
+        }else if (arg_type == "VBLANK") {
+            try {
+                unsigned int i = std::stoi(orig_arg.substr(orig_arg.find(delimiter) + 1, orig_arg.size() - (arg_type.size() + 1)));
+                if (i > 0) vblank = true; else vblank = false;
+            }catch (const std::invalid_argument& error) {
+                std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
+                res = 20;
+            }catch (const std::out_of_range& error) {
+                std::cerr << "Error: invalid scale size. Defaulting to 640 x 320.\n";
+                res = 20;
             }
         }
     }
@@ -161,7 +185,7 @@ int main(int argc, char* argv[]) {
     //Load Chip8 Game
     if (!no_games) {
         fent8.load_game(game_path);
-        fent8.set_yshift(true);
+        fent8.set_yshift(y_shift);
     }else {
         std::cout << "No valid game path specified. Exiting...\n";
         quit = true;
@@ -351,7 +375,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < fent8.get_emu_speed() / 60; i++) {
             fent8.emulate_cycle();
             if (fent8.get_quit_flag()) break;
-            if (fent8.get_draw_flag()) break;
+            if (vblank && fent8.get_draw_flag()) break;
         }
         Uint64 current_ticks = SDL_GetTicks();
         while ((current_ticks - cycle_start) < 1000 / 60) {

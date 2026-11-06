@@ -256,27 +256,36 @@ namespace chip8 {
 
             //DRAW
             case 0x0D:
+                //VF is set to 0 before the sprite is drawn.
                 V[15] = 0;
+
                 //Loops through each byte in the sprite
                 for (int i = 0; i < nib4; i++) {
                     unsigned char byte = read_mem(I+i);
 
                     //Loops through each bit in the byte, XOR it with the screen
                     for (int j = 0; j < 8; j++) {
+                        //Generate variables for the bit to draw and the coordinates
                         unsigned char bit = (byte >> (7 - j)) & 0b00000001;
                         unsigned int draw_x = ((V[nib2] % 64) + j);
                         unsigned int draw_y = ((V[nib3] % 32) + i);
+
+                        //Draw the current line of the sprite
                         if (draw_x + (draw_y * 64) < ((draw_y+1) * 64) && draw_y < 32) {
+                            //XORs the bit in the sprite with the pixel on screen
                             unsigned char new_bit = bit ^ screen[(draw_x + (draw_y * 64))];
 
                             if (bit == 1 && screen[draw_x + (draw_y * 64)] == 1 && new_bit == 0) {
+                                //Set VF to 1 if there is a collision (both bit & old screen pixel are 1, new_bit is 0)
                                 V[15] = 1;
                             }
 
+                            //Actually apply the change
                             screen[(draw_x + (draw_y * 64))] = new_bit;
                         }
                     }
 
+                    //Turn on draw flag so SDL3 will render changes
                     draw_flag = true;
                 }
 
@@ -316,6 +325,7 @@ namespace chip8 {
                             if (key[i] > 0 && none_pressed == true) {
                                 V[nib2] = i;
                                 none_pressed = false;
+                                break;
                             }
                         }
 
@@ -470,6 +480,7 @@ namespace chip8 {
 
         }else {
             std::cout << "ERROR: game file could not be opened.\n";
+            quit_flag = true;
         }
     }
 
@@ -509,6 +520,11 @@ namespace chip8 {
 
     void chip8::set_draw_flag(bool flag) {
         this->draw_flag = flag;
+    }
+
+    void chip8::set_palette(unsigned int color1, unsigned int color2) {
+        c1 = color1;
+        c2 = color2;
     }
 
     void chip8::set_pixel(int x, int y, unsigned char val) {

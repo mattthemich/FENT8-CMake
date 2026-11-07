@@ -6,27 +6,27 @@ Currently, this project only supports building for Linux, but I'll eventually ge
 
 ### Linux
 1. Clone this project somewhere on your computer with
-'''
+```
 git clone https://github.com/mattthemich/FENT8-CMake.git
-'''
+```
 
 2. Go into the FENT8 folder, and clone SDL3 into Vendored/SDL
-'''
+```
 cd FENT8-CMake
 git clone https://github.com/libsdl-org/SDL.git vendored/SDL
-'''
+```
 
 3. Build the project
-'''
+```
 cmake -S . -B build
 cmake --build build
-'''
+```
 
 ## Usage
 You start FENT8 from the command line, along with the path to the game you want to open.
-'''
+```
 ./fent8 GAME_PATH="/path/to/game.ch8"
-'''
+```
 
 There are also a few other launch arguments you can use.
 - RES = How large the game window will be scaled up. Default is 20. Example: RES=15

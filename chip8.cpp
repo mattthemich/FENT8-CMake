@@ -493,40 +493,74 @@ namespace chip8 {
         return memory[addr];
     }
 
+    /**
+     * Places a character into addr in memory
+     * @param addr The address val will be placed into
+     * @param val An unsigned character value
+     */
     void chip8::write_mem(unsigned int addr, unsigned char val) {
         memory[addr] = val;
     }
 
     //Screen Operations
-    void chip8::draw_sprite() {
-        //todo
-    }
-
+    /**
+     *
+     * @return The ON (1) color of the current palette
+     */
     unsigned int chip8::get_color1() {
         return chip8::c1;
     }
 
+    /**
+     *
+     * @return The OFF (0) color of the current palette
+     */
     unsigned int chip8::get_color2() {
         return chip8::c2;
     }
 
+    /**
+     *
+     * @return Returns true if anything was drawn to the screen previously
+     */
     bool chip8::get_draw_flag() {
         return draw_flag;
     }
 
+    /**
+     * Gets the value of a pixel on the emulated screen
+     * @param x The X coordinate for the screen
+     * @param y The Y coordinate for the screen
+     * @return The value at [x, y] on the screen
+     */
     unsigned char chip8::get_pixel(int x, int y) {
         return chip8::screen[x + (y*64)];
     }
 
+    /**
+     * Manually set the draw flag to either true or false.
+     * @param flag The value to be set
+     */
     void chip8::set_draw_flag(bool flag) {
         this->draw_flag = flag;
     }
 
+    /**
+     * Assigns new integers to the palette. Format is 0xAARRGGBB
+     * @param color1 ON (1) Color
+     * @param color2 OFF (0) Color
+     */
     void chip8::set_palette(unsigned int color1, unsigned int color2) {
         c1 = color1;
         c2 = color2;
     }
 
+    /**
+     * Manually set a pixel on the screen
+     * @param x X Coordinate
+     * @param y Y Coordinate
+     * @param val The new value for the pixel
+     */
     void chip8::set_pixel(int x, int y, unsigned char val) {
         if (screen[x+(y*64)] != val) {
             screen[x+(y*64)] = val;
@@ -534,6 +568,9 @@ namespace chip8 {
         }
     }
 
+    /**
+     * Manually sets the screen to a test pattern. Was a debug function, but is currently unused.
+     */
     void chip8::test_pattern() {
         for (int j = 0; j < 32; j++) {
             for (int i = 0; i < 64; i++) {
@@ -544,6 +581,9 @@ namespace chip8 {
     }
 
     //Timer Operations
+    /**
+     * Decreases the value of the delay timer by one, but never goes below 0.
+     */
     void chip8::decrement_delay() {
         if (delay_timer > 0) {
             //std::cout << "Delay Decremented to " << std::hex << delay_timer << std::endl;
@@ -551,6 +591,9 @@ namespace chip8 {
         }
     }
 
+    /**
+     * Decreases the value of the sound timer by one, but never goes below 0.
+     */
     void chip8::decrement_sound() {
         if (sound_timer > 0) {
             //std::cout << "Sound Decremented to " << std::hex << delay_timer << std::endl;
